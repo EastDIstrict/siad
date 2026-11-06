@@ -1,13 +1,14 @@
 import java.util.Random;
+import java.util.Arrays;
 
 public class CacheBenchmark {
 
-    static long sink = 0;
+
+    static long total = 0;
 
     public static void main(String[] args) {
 
         int smallSize = 16 * 1024 / 4;
-
         int largeSize = 64 * 1024 * 1024 / 4;
 
         int[] smallArray = new int[smallSize];
@@ -25,55 +26,63 @@ public class CacheBenchmark {
 
         for (int step = 1; step <= 128; step = step * 2) {
 
-            double smallTime = 0;
-            for (int r = 0; r < 10; r++) {
-
-                for (int w = 0; w < 10; w++) {
-                    long sum = 0;
-                    for (int i = 0; i < smallArray.length; i = i + step) {
-                        sum = sum + smallArray[i];
-                    }
-                    sink = sum;
+            for (int w = 0; w < 100; w++) {
+                long sum = 0;
+                for (int i = 0; i < smallArray.length; i = i + step) {
+                    sum = sum + smallArray[i];
                 }
+                total = sum;
+            }
 
+            long[] smallTimes = new long[11];
+
+            for (int r = 0; r < 11; r++) {
                 long start = System.nanoTime();
                 long sum = 0;
                 for (int i = 0; i < smallArray.length; i = i + step) {
                     sum = sum + smallArray[i];
                 }
-                sink = sum;
+                total = sum;
                 long end = System.nanoTime();
 
-                smallTime = smallTime + (end - start);
+                smallTimes[r] = end - start;
             }
 
+            Arrays.sort(smallTimes);
+            long medianSmall = smallTimes[5];
+
             int countSmall = (smallArray.length + step - 1) / step;
-            smallTime = smallTime / 5 / countSmall;
+            double smallTime = (double) medianSmall / countSmall;
 
-
-
-            double largeTime = 0;
-            for (int r = 0; r < 10; r++) {
-                for (int w = 0; w < 10; w++) {
-                    long sum = 0;
-                    for (int i = 0; i < largeArray.length; i = i + step) {
-                        sum = sum + largeArray[i];
-                    }
-                    sink = sum;
+            for (int w = 0; w < 100; w++) {
+                long sum = 0;
+                for (int i = 0; i < largeArray.length; i = i + step) {
+                    sum = sum + largeArray[i];
                 }
+                total = sum;
+            }
+
+            long[] largeTimes = new long[11];
+
+            for (int r = 0; r < 11; r++) {
                 long start = System.nanoTime();
                 long sum = 0;
                 for (int i = 0; i < largeArray.length; i = i + step) {
                     sum = sum + largeArray[i];
                 }
-                sink = sum;
+                total = sum;
                 long end = System.nanoTime();
-                largeTime = largeTime + (end - start);
-            }
-            int countLarge = (largeArray.length + step - 1) / step;
-            largeTime = largeTime / 5 / countLarge;
 
-            System.out.println(step + ", " + smallTime + ", " + largeTime);
+                largeTimes[r] = end - start;
+            }
+
+            Arrays.sort(largeTimes);
+            long medianLarge = largeTimes[5];
+
+            int countLarge = (largeArray.length + step - 1) / step;
+            double largeTime = (double) medianLarge / countLarge;
+
+            System.out.printf("%d, %.3f, %.3f\n", step, smallTime, largeTime);
         }
     }
 }
